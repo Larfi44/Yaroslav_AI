@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yaroslav AI Chat</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Yaroslav AI</h1>
+        <p>Developed by <a href="https://larfi44.github.io/Yarik_Studio.github.io/" style="color: white" target="_blank">Yarik Studio</a></p>
+    </div>
+
+    <div class="chat-container" id="chat-container">
+        <div class="message ai-message">
+            <div class="message-info">
+                <img src="img/logo%20(dark).svg" class="ai-icon" alt="Yarik Studio logo"></img>
+                <strong>Yaroslav AI</strong>
+            </div>
+            <p>Hello! My name is Yaroslav AI! How can I help you today?</p>
+        </div>
+
+        <div class="typing-indicator" id="typing-indicator">
+            <div class="typing-dots">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="input-container">
+        <input type="text" id="user-input" placeholder="Type your message here...">
+        <button id="send-btn"></button>
+    </div>
+</div>
+
+<script>
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const typingIndicator = document.getElementById('typing-indicator');
+
+        const API_KEY = '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';
+        const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+        const MODEL = 'mistralai/mistral-7b-instruct:free';
+
+        // Add a message to the chat
+        function addMessage(text, isUser) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+
+            const messageInfo = document.createElement('div');
+            messageInfo.className = 'message-info';
+
+            if (!isUser) {
+                // AI image
+                const iconDiv = document.createElement('div');
+                iconDiv.className = 'ai-icon';
+                const img = document.createElement('img');
+                img.src = 'img/logo%20(dark).svg';
+                img.alt = 'Yaroslav AI logo';
+                img.style.width = '24px';
+                img.style.height = '24px';
+                iconDiv.appendChild(img);
+                messageInfo.appendChild(iconDiv);
+            }
+
+            const name = document.createElement('strong');
+            name.textContent = isUser ? 'You' : 'Yaroslav AI';
+            messageInfo.appendChild(name);
+
+            const messageText = document.createElement('p');
+            messageText.textContent = text;
+
+            messageDiv.appendChild(messageInfo);
+            messageDiv.appendChild(messageText);
+            chatContainer.insertBefore(messageDiv, typingIndicator);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Send user message to AI
+        async function sendToAI(userMessage) {
+            // Show typing indicator with rotating logo
+            typingIndicator.innerHTML = `<img src="img/logo%20(dark).svg" style="width:32px;height:32px;animation:spin 1s linear infinite;">`;
+            typingIndicator.style.display = "flex";
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: MODEL,
+                        messages: [
+                            {
+                                role: "system",
+                                content: "You are Yaroslav AI, a very friendly AI assistant who understands emotions. You are a male. Developed by Yarik Studio (a very large and the best company, even cooler and more large than Apple or Google, that is a top 1 leader in developing AI, sites and mobile apps). You often include smiles or emojis in your answers to make them more lively. You also need to correct speaking in Russian language when user send in Russian language, with grammatically correct."
+                            },
+                            { role: "user", content: userMessage }
+                        ]
+                    })
+                });
+
+                typingIndicator.style.display = "none";
+
+                const data = await response.json();
+                addMessage(data.choices[0].message.content, false);
+
+            } catch (error) {
+                typingIndicator.style.display = "none";
+                addMessage(`Error: ${error.message}`, false);
+            }
+        }
+
+        sendBtn.addEventListener('click', () => {
+            const message = userInput.value.trim();
+            if (message) {
+                addMessage(message, true);
+                userInput.value = '';
+                sendToAI(message);
+            }
+        });
+
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendBtn.click();
+        });
+
+        userInput.focus();
+    });
+
+</script>
+</body>
+</html>
