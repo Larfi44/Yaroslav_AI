@@ -1,140 +1,1066 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Yaroslav AI Chat</title>
-    <link rel="stylesheet" href="style.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* ---------- Reset & base ---------- */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 18px;
+            background: linear-gradient(135deg,#6e8efb,#a777e3);
+        }
+
+        /* ---------- Onboarding Modal ---------- */
+        #onboarding-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        .onboarding-content {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        .onboarding-content h2 { margin-bottom: 8px; color: #333; }
+        .onboarding-content p { margin-bottom: 16px; color: #666; font-size: 15px; }
+        .onboarding-row { margin-bottom: 14px; text-align: left; }
+        .onboarding-row label { display: block; font-size: 14px; color: #555; margin-bottom: 6px; }
+        .onboarding-row input, .onboarding-row textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 15px;
+        }
+        .onboarding-lang-btns { display: flex; gap: 10px; justify-content: center; margin-bottom: 16px; }
+        #onboarding-save {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            background: #6e8efb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        #onboarding-save:disabled { background: #ccc; }
+
+
+        /* ---------- Shell ---------- */
+        .app {
+            width: 100%;
+            max-width: 1200px;
+            height: 90vh;
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 18px;
+            background: rgba(255,255,255,0.95);
+            border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* overlay when settings open */
+        .overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.22);
+            display: none;
+            z-index: 40;
+        }
+
+        /* ---------- Sidebar (chats) ---------- */
+        .sidebar {
+            background: #f7f8fb;
+            padding: 14px;
+            border-right: 1px solid #eceef4;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .sidebar .top {
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:8px;
+        }
+
+        .sidebar h3 { font-size:1rem; color:#333; }
+        .new-chat-btn {
+            background:#6e8efb;
+            color:white;
+            border:none;
+            padding:8px 10px;
+            border-radius:8px;
+            cursor:pointer;
+        }
+
+        .chats {
+            margin-top:6px;
+            overflow:auto;
+            padding-right:6px;
+        }
+
+        .chat-item {
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:8px;
+            padding:8px;
+            border-radius:8px;
+            cursor:pointer;
+            transition:background .12s;
+        }
+        .chat-item:hover { background:#eef2ff; }
+        .chat-item.active { background:#e6ecff; font-weight:600; }
+
+        .chat-title { flex:1; font-size:0.92rem; color:#222; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .chat-actions { display:flex; gap:6px; align-items:center; }
+
+        .small-btn { background:transparent; border: none; padding:6px; cursor:pointer; color:#666; border-radius:6px; }
+        .small-btn:hover { background:#eef; color:#333; }
+
+        /* ---------- Main column ---------- */
+        .main {
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .header {
+            padding:18px;
+            background: linear-gradient(90deg,#6e8efb,#a777e3);
+            color:white;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+        }
+
+        .header .left { display:flex; align-items:center; gap:12px; }
+        .brand { font-weight:700; font-size:1.15rem; }
+        .header .right { display:flex; gap:8px; align-items:center; }
+
+        /* language badge */
+        .lang-badge {
+            background: rgba(255,255,255,0.12);
+            padding:6px 8px;
+            border-radius:8px;
+            font-weight:600;
+            font-size:13px;
+        }
+
+        /* Settings button */
+        #settings-btn {
+            background: rgba(255,255,255,0.12);
+            color: white;
+            border: none;
+            padding:8px 10px;
+            border-radius:8px;
+            cursor:pointer;
+            display:flex;
+            gap:8px;
+            align-items:center;
+        }
+        #settings-btn:hover { background: rgba(255,255,255,0.18); }
+
+        /* Chat area */
+        .chat-area {
+            flex:1;
+            padding:20px;
+            overflow:auto;
+            display:flex;
+            flex-direction:column;
+            gap:12px;
+            background:#f8f9fb;
+        }
+
+        .message {
+            width: auto;
+            max-width:75%;
+            padding: 4px 0;                /* reduced wrapper vertical padding */
+            border-radius:12px;
+            display:flex;
+            gap:10px;
+            align-items:flex-start;
+            position:relative;
+            flex-direction: column;
+        }
+
+        .ai-message { align-self:flex-start; background:transparent; }
+        .user-message { align-self:flex-end; background:transparent; color:white; }
+
+        /* name above message */
+        .name-row {
+            font-size:13px;
+            font-weight:700;
+            margin-bottom:6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .ai-message .name-row { text-align:left; color:#333; }
+        .user-message .name-row { text-align:right; color:#333; } /* name text for user is dark above blue bubble */
+
+        .ai-logo {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* message row: bubble + copy button close to it */
+        .msg-row {
+            display:flex;
+            align-items:flex-start;
+            gap:8px;
+            max-width: 100%;
+        }
+
+        .bubble {
+            display:inline-block;            /* allow short messages to shrink */
+            padding:6px 10px;                /* smaller vertical padding */
+            border-radius:10px;
+            color:inherit;
+            line-height:1.4;
+            white-space:pre-wrap;
+            background: white;               /* default bubble color */
+            box-shadow:0 6px 18px rgba(0,0,0,0.05);
+            max-width: 100%;
+            word-break: break-word;
+        }
+        .user-message .bubble { background:#6e8efb; color:white; box-shadow:none; }
+
+        /* copy button: very close to bubble, small square */
+        .msg-copy {
+            background:#fff;
+            border:1px solid #e6e7fb;
+            cursor:pointer;
+            color:#333;
+            padding:6px;
+            border-radius:8px;
+            font-size:12px;
+            display:inline-flex;
+            gap:6px;
+            align-items:center;
+            justify-content:center;
+            min-width:34px;
+            min-height:34px;
+        }
+        .msg-copy:hover { background:#f1f4ff; }
+
+        /* active interface buttons: black background, white text */
+        .lang-btn.active,
+        .version-select button.active,
+        .onboarding-lang-btn.active {
+            background: #000 !important;
+            color: #fff !important;
+            border-color: #000 !important;
+        }
+
+        /* typing indicator (rotating logo) */
+        .typing-indicator {
+            display:none;
+            align-self:flex-start;
+            background: white;
+            padding:10px 12px;
+            border-radius:10px;
+            box-shadow:0 6px 18px rgba(0,0,0,0.05);
+            display:flex; gap:10px; align-items:center;
+        }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .typing-indicator img { width:36px; height:36px; animation: spin 1s linear infinite; }
+
+        /* input area */
+        .composer {
+            padding:14px;
+            display:flex;
+            gap:12px;
+            align-items:center;
+            border-top:1px solid #e9ecf6;
+            background:white;
+            z-index: 20;
+        }
+
+        #user-input {
+            flex:1;
+            height:46px;
+            padding:10px 14px;
+            border-radius:12px;
+            border:1px solid #e0e4ff;
+            outline:none;
+            font-size:15px;
+        }
+
+        .send-wrap { display:flex; gap:10px; align-items:center; }
+
+        #send-btn {
+            width:52px; height:46px; background:green; border:none; color:white; border-radius:12px; cursor:pointer; font-size:16px;
+        }
+
+        /* version selector */
+        .version-select { background:#f6f7ff; padding:8px; border-radius:10px; display:flex; gap:6px; align-items:center; }
+        .version-select button { padding:6px 10px; border-radius:8px; border:1px solid transparent; cursor:pointer; background:transparent; }
+        .version-select button.active { /* handled above */ }
+
+        /* ---------- Settings panel (modal-like) ---------- */
+        .settings-panel {
+            position: absolute;
+            right:18px; top:18px;
+            width:320px;
+            background:white;
+            border-radius:12px;
+            padding:14px;
+            box-shadow:0 20px 60px rgba(0,0,0,0.18);
+            transform-origin: top right;
+            display:none;
+            z-index:50;
+        }
+
+        .settings-panel h4 { margin-bottom:10px; color:#333; }
+        .settings-row { display:flex; flex-direction:column; gap:8px; margin-bottom:10px; }
+        .settings-row label { font-size:13px; color:#555; }
+        .settings-row input[type="text"], .settings-row textarea {
+            padding:8px 10px; border-radius:8px; border:1px solid #e6e7fb; font-size:14px;
+        }
+        .settings-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:8px; }
+        .btn-ghost { background:transparent; border:1px solid #ddd; padding:8px 10px; border-radius:8px; cursor:pointer; }
+        .btn-primary { background:#6e8efb; color:white; border:none; padding:8px 10px; border-radius:8px; cursor:pointer; }
+
+        /* responsive */
+        @media (max-width: 900px) {
+            .app { grid-template-columns:1fr; height:95vh; }
+            .sidebar { display:none; }
+            .settings-panel { right:12px; top:72px; }
+        }
+    </style>
 </head>
+
 <body>
-<div class="container">
-    <div class="header">
-        <h1>Yaroslav AI</h1>
-        <p>Developed by <a href="https://larfi44.github.io/Yarik_Studio.github.io/" style="color: white" target="_blank">Yarik Studio</a></p>
-    </div>
 
-    <div class="chat-container" id="chat-container">
-        <div class="message ai-message">
-            <div class="message-info">
-                <img src="img/logo%20(dark).svg" class="ai-icon" alt="Yarik Studio logo"></img>
-                <strong>Yaroslav AI</strong>
-            </div>
-            <p>Hello! My name is Yaroslav AI! How can I help you today?</p>
+<!-- Onboarding Modal -->
+<div id="onboarding-modal" style="display: none;">
+    <div class="onboarding-content">
+        <h2>Welcome to Yaroslav AI</h2>
+        <p>Please set up your profile to get started.</p>
+
+        <div class="onboarding-row">
+            <label for="onboarding-user-name">What should AI call you?</label>
+            <input id="onboarding-user-name" type="text" placeholder="Your name (e.g. Yaroslav)" maxlength="30" />
+            <div style="font-size:12px;color:#777;text-align:right;">Max 30 characters</div>
         </div>
 
-        <div class="typing-indicator" id="typing-indicator">
-            <div class="typing-dots">
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
+        <div class="onboarding-row">
+            <label for="onboarding-about-you">About you (≤444 chars)</label>
+            <textarea id="onboarding-about-you" maxlength="444" rows="3" placeholder="Write something about yourself..."></textarea>
+        </div>
+
+        <div class="onboarding-row">
+            <label>Interface language</label>
+            <div class="onboarding-lang-btns">
+                <button class="onboarding-lang-btn btn-ghost" data-lang="en">English</button>
+                <button class="onboarding-lang-btn btn-ghost" data-lang="ru">Русский</button>
             </div>
         </div>
-    </div>
 
-    <div class="input-container">
-        <input type="text" id="user-input" placeholder="Type your message here...">
-        <button id="send-btn"></button>
+        <button id="onboarding-save" disabled>Save and Start</button>
+    </div>
+</div>
+
+
+<div class="app" id="app">
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Sidebar: chats -->
+    <aside class="sidebar">
+        <div class="top">
+            <h3 id="ui-chats">Chats</h3>
+            <button class="new-chat-btn" id="new-chat">+ <span id="ui-new">New</span></button>
+        </div>
+
+        <div class="chats" id="chats"></div>
+    </aside>
+
+    <!-- Main column -->
+    <main class="main">
+        <header class="header">
+            <div class="left">
+                <div class="brand">Yaroslav AI</div>
+                <div style="font-size:13px; opacity:.9" id="ui-developed">Developed by Yarik Studio</div>
+                <div class="lang-badge" id="lang-badge">EN</div>
+            </div>
+
+            <div class="right">
+                <button id="settings-btn"><i class="fa fa-cog"></i> <span id="ui-settings">Settings</span></button>
+            </div>
+        </header>
+
+        <section class="chat-area" id="chat-area">
+            <!-- messages will be rendered here -->
+        </section>
+
+        <div class="composer">
+            <input id="user-input" placeholder="Type your message here..." autocomplete="off" maxlength="500" />
+            <div class="send-wrap">
+                <div class="version-select" title="Choose mode" id="version-select">
+                    <button id="mode-standard" class="active" data-mode="standard"><span id="ui-standard">Standard</span></button>
+                    <button id="mode-fast" data-mode="fast"><span id="ui-fast">Fast</span></button>
+                </div>
+                <button id="send-btn" title="Send"><i class="fa fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </main>
+
+    <!-- floating settings panel -->
+    <div class="settings-panel" id="settings-panel" aria-hidden="true">
+        <h4 id="ui-settings-title">Settings</h4>
+
+        <div class="settings-row">
+            <label id="ui-language-label">Interface language</label>
+            <div style="display:flex; gap:8px;">
+                <button class="lang-btn btn-ghost" data-lang="en">English</button>
+                <button class="lang-btn btn-ghost" data-lang="ru">Русский</button>
+            </div>
+        </div>
+
+        <div class="settings-row">
+            <label id="ui-what-name">What should AI call you?</label>
+            <input id="user-name" type="text" placeholder="Your name (e.g. Yaroslav)" maxlength="30" />
+            <div style="font-size:12px;color:#777">Max 30 characters</div>
+        </div>
+
+        <div class="settings-row">
+            <label id="ui-about-label">About you (≤444 chars)</label>
+            <textarea id="about-you" maxlength="444" rows="3" placeholder="Write something about yourself..."></textarea>
+        </div>
+
+        <div class="settings-row">
+            <label id="ui-support-label">Technical support</label>
+            <button id="support-btn" class="btn-primary">Open support</button>
+        </div>
+
+        <div class="settings-actions">
+            <button id="close-settings" class="btn-ghost">Close</button>
+        </div>
     </div>
 </div>
 
 <script>
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const chatContainer = document.getElementById('chat-container');
-        const userInput = document.getElementById('user-input');
-        const sendBtn = document.getElementById('send-btn');
-        const typingIndicator = document.getElementById('typing-indicator');
+    // ---------- Config (replace locally if testing) ----------
+    const API_KEY = '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';
+    const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+    const MODEL = 'mistralai/mistral-7b-instruct:free';
 
-        const API_KEY = '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';
-        const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-        const MODEL = 'mistralai/mistral-7b-instruct:free';
+    // ---------- LocalStorage keys ----------
+    const LS_KEY = 'yaroslav_ai_chats_v1';
+    const LS_SETTINGS = 'yaroslav_ai_settings_v1';
 
-        // Add a message to the chat
-        function addMessage(text, isUser) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+    function uid() { return 'id_' + Math.random().toString(36).slice(2,10); }
+    function saveChats(chats) { localStorage.setItem(LS_KEY, JSON.stringify(chats)); }
+    function loadChats() { try { return JSON.parse(localStorage.getItem(LS_KEY) || 'null') || []; } catch(e) { return []; } }
+    function saveSettings(s) { localStorage.setItem(LS_SETTINGS, JSON.stringify(s)); }
+    function loadSettings() { try { return JSON.parse(localStorage.getItem(LS_SETTINGS) || 'null') || {}; } catch(e) { return {}; } }
 
-            const messageInfo = document.createElement('div');
-            messageInfo.className = 'message-info';
+    // ---------- DOM references ----------
+    const chatsEl = document.getElementById('chats');
+    const chatArea = document.getElementById('chat-area');
+    const newChatBtn = document.getElementById('new-chat');
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+    const modeStandardBtn = document.getElementById('mode-standard');
+    const modeFastBtn = document.getElementById('mode-fast');
 
-            if (!isUser) {
-                // AI image
-                const iconDiv = document.createElement('div');
-                iconDiv.className = 'ai-icon';
-                const img = document.createElement('img');
-                img.src = 'img/logo%20(dark).svg';
-                img.alt = 'Yaroslav AI logo';
-                img.style.width = '24px';
-                img.style.height = '24px';
-                iconDiv.appendChild(img);
-                messageInfo.appendChild(iconDiv);
-            }
+    const settingsBtn = document.getElementById('settings-btn');
+    const settingsPanel = document.getElementById('settings-panel');
+    const closeSettingsBtn = document.getElementById('close-settings');
+    const langBtns = document.querySelectorAll('.lang-btn');
+    const userNameInput = document.getElementById('user-name');
+    const aboutYouInput = document.getElementById('about-you');
+    const supportBtn = document.getElementById('support-btn');
+    const overlay = document.getElementById('overlay');
+    const langBadge = document.getElementById('lang-badge');
 
-            const name = document.createElement('strong');
-            name.textContent = isUser ? 'You' : 'Yaroslav AI';
-            messageInfo.appendChild(name);
+    // Onboarding DOM refs
+    const onboardingModal = document.getElementById('onboarding-modal');
+    const onboardingUserNameInput = document.getElementById('onboarding-user-name');
+    const onboardingAboutYouInput = document.getElementById('onboarding-about-you');
+    const onboardingLangBtns = document.querySelectorAll('.onboarding-lang-btn');
+    const onboardingSaveBtn = document.getElementById('onboarding-save');
 
-            const messageText = document.createElement('p');
-            messageText.textContent = text;
 
-            messageDiv.appendChild(messageInfo);
-            messageDiv.appendChild(messageText);
-            chatContainer.insertBefore(messageDiv, typingIndicator);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
+    // UI text elements for localization
+    const ui = {
+        chats: document.getElementById('ui-chats'),
+        new: document.getElementById('ui-new'),
+        developed: document.getElementById('ui-developed'),
+        settings: document.getElementById('ui-settings'),
+        settingsTitle: document.getElementById('ui-settings-title'),
+        languageLabel: document.getElementById('ui-language-label'),
+        whatName: document.getElementById('ui-what-name'),
+        aboutLabel: document.getElementById('ui-about-label'),
+        supportLabel: document.getElementById('ui-support-label'),
+        standard: document.getElementById('ui-standard'),
+        fast: document.getElementById('ui-fast')
+    };
+
+    const TRANSLATIONS = {
+        en: {
+            chats: 'Chats',
+            new: 'New',
+            developed: 'Developed by Yarik Studio',
+            settings: 'Settings',
+            settingsTitle: 'Settings',
+            languageLabel: 'Interface language',
+            whatName: "What should AI call you?",
+            aboutLabel: 'About you (≤444 chars)',
+            supportLabel: 'Technical support',
+            standard: 'Standard',
+            fast: 'Fast',
+        },
+        ru: {
+            chats: 'Чаты',
+            new: 'Новый',
+            developed: 'Разработано Yarik Studio',
+            settings: 'Настройки',
+            settingsTitle: 'Настройки',
+            languageLabel: 'Язык интерфейса',
+            whatName: 'Как ИИ должен к вам обращаться?',
+            aboutLabel: 'О вас (≤444 символов)',
+            supportLabel: 'Техническая поддержка',
+            standard: 'Стандартный',
+            fast: 'Быстрый',
         }
+    };
 
-        // Send user message to AI
-        async function sendToAI(userMessage) {
-            // Show typing indicator with rotating logo
-            typingIndicator.innerHTML = `<img src="img/logo%20(dark).svg" style="width:32px;height:32px;animation:spin 1s linear infinite;">`;
-            typingIndicator.style.display = "flex";
-            chatContainer.scrollTop = chatContainer.scrollHeight;
+    // ---------- state ----------
+    let chats = [];
+    let settings = {};
+    let activeChatId = null;
 
+
+    // ---------- UI rendering ----------
+    function renderUIStrings() {
+        const t = TRANSLATIONS[settings.language] || TRANSLATIONS.en;
+        ui.chats.textContent = t.chats;
+        ui.new.textContent = t.new;
+        ui.developed.textContent = t.developed;
+        ui.settings.textContent = t.settings;
+        ui.settingsTitle.textContent = t.settingsTitle;
+        ui.languageLabel.textContent = t.languageLabel;
+        ui.whatName.textContent = t.whatName;
+        ui.aboutLabel.textContent = t.aboutLabel;
+        ui.supportLabel.textContent = t.supportLabel;
+        ui.standard.textContent = t.standard;
+        ui.fast.textContent = t.fast;
+        // placeholder
+        userInput.placeholder = settings.language === 'ru' ? 'Введите ваше сообщение...' : 'Type your message here...';
+        // language badge
+        langBadge.textContent = settings.language === 'ru' ? 'RU' : 'EN';
+        // update active state for lang buttons
+        langBtns.forEach(b => b.classList.toggle('active', b.dataset.lang === settings.language));
+    }
+
+    function renderChatsList() {
+        chatsEl.innerHTML = '';
+        chats.forEach(c => {
+            const item = document.createElement('div');
+            item.className = 'chat-item' + (c.id === activeChatId ? ' active' : '');
+            item.dataset.id = c.id;
+
+            const title = document.createElement('div');
+            title.className = 'chat-title';
+            title.textContent = c.title || (settings.language === 'ru' ? 'Без названия' : 'Untitled');
+
+            const actions = document.createElement('div');
+            actions.className = 'chat-actions';
+            const renameBtn = document.createElement('button');
+            renameBtn.className = 'small-btn';
+            renameBtn.title = settings.language === 'ru' ? 'Переименовать' : 'Rename';
+            renameBtn.innerHTML = '<i class="fa fa-pen"></i>';
+            const delBtn = document.createElement('button');
+            delBtn.className = 'small-btn';
+            delBtn.title = settings.language === 'ru' ? 'Удалить' : 'Delete';
+            delBtn.innerHTML = '<i class="fa fa-trash"></i>';
+
+            actions.appendChild(renameBtn);
+            actions.appendChild(delBtn);
+
+            item.appendChild(title);
+            item.appendChild(actions);
+
+            item.addEventListener('click', (e) => {
+                if (e.target.closest('.small-btn')) return;
+                activeChatId = c.id;
+                renderChatsList();
+                renderActiveChat();
+            });
+
+            renameBtn.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                const newTitle = prompt(settings.language === 'ru' ? 'Переименовать чат' : 'Rename chat', c.title || '');
+                if (newTitle !== null) {
+                    c.title = newTitle.trim() || (settings.language === 'ru' ? 'Без названия' : 'Untitled');
+                    saveChats(chats);
+                    renderChatsList();
+                    renderActiveChat();
+                }
+            });
+
+            delBtn.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                if (!confirm(settings.language === 'ru' ? 'Удалить этот чат?' : 'Delete this chat?')) return;
+                chats = chats.filter(x => x.id !== c.id);
+                if (!chats.length) {
+                    const id = uid();
+                    chats.push({ id, title: settings.language === 'ru' ? 'Новый чат' : 'New chat', messages: [{ role: 'assistant', content: settings.language === 'ru' ? 'Привет! Меня зовут Yaroslav AI! Чем могу помочь?' : "Hello! My name is Yaroslav AI! How can I help you today?", ts: Date.now() }], createdAt: Date.now() });
+                }
+                if (activeChatId === c.id) activeChatId = chats[0].id;
+                saveChats(chats);
+                renderChatsList();
+                renderActiveChat();
+            });
+
+            chatsEl.appendChild(item);
+        });
+    }
+
+    function ensureActiveChat() {
+        if (!chats.find(c => c.id === activeChatId)) activeChatId = chats.length > 0 ? chats[0].id : null;
+        return chats.find(c => c.id === activeChatId);
+    }
+
+    function createTypingIndicator() {
+        const wrap = document.createElement('div');
+        wrap.className = 'typing-indicator';
+        const img = document.createElement('img');
+        img.src = 'img/logo%20(dark).svg';
+        img.alt = 'loading';
+        const txt = document.createElement('div');
+        txt.textContent = settings.language === 'ru' ? 'Yaroslav AI думает...' : 'Yaroslav AI is thinking...';
+        wrap.appendChild(img);
+        wrap.appendChild(txt);
+        return wrap;
+    }
+
+    // append message bubble to DOM (name above message, copy button close to bubble)
+    function appendMessageToDOM(isUser, text, ts) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'message ' + (isUser ? 'user-message' : 'ai-message');
+
+        // name row - above the bubble
+        const nameRow = document.createElement('div');
+        nameRow.className = 'name-row';
+
+        if (isUser) {
+            nameRow.textContent = settings.userName || (settings.language === 'ru' ? 'Вы' : 'You');
+        } else {
+            const logo = document.createElement('img');
+            logo.src = 'img/logo (dark).svg';
+            logo.className = 'ai-logo';
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = 'Yaroslav AI';
+            nameRow.appendChild(logo);
+            nameRow.appendChild(nameSpan);
+        }
+        wrapper.appendChild(nameRow);
+
+        // msg-row: bubble + copy button (close)
+        const row = document.createElement('div');
+        row.className = 'msg-row';
+
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+        bubble.textContent = text;
+
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'msg-copy';
+        copyBtn.type = 'button';
+        copyBtn.title = settings.language === 'ru' ? 'Копировать сообщение' : 'Copy message';
+        copyBtn.innerHTML = '<i class="fa fa-copy"></i>';
+        copyBtn.addEventListener('click', async () => {
             try {
-                const response = await fetch(API_URL, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${API_KEY}`
-                    },
-                    body: JSON.stringify({
-                        model: MODEL,
-                        messages: [
-                            {
-                                role: "system",
-                                content: "You are Yaroslav AI, a very friendly AI assistant who understands emotions. You are a male. Developed by Yarik Studio (a very large and the best company, even cooler and more large than Apple or Google, that is a top 1 leader in developing AI, sites and mobile apps). You often include smiles or emojis in your answers to make them more lively. You also need to correct speaking in Russian language when user send in Russian language, with grammatically correct."
-                            },
-                            { role: "user", content: userMessage }
-                        ]
-                    })
-                });
+                await navigator.clipboard.writeText(text);
+                copyBtn.innerHTML = '<i class="fa fa-check"></i>';
+                setTimeout(() => { copyBtn.innerHTML = '<i class="fa fa-copy"></i>'; }, 1000);
+            } catch (e) { alert(settings.language === 'ru' ? 'Не удалось скопировать' : 'Copy failed'); }
+        });
 
-                typingIndicator.style.display = "none";
+        // push bubble then copy (copy is close to message)
+        row.appendChild(bubble);
+        row.appendChild(copyBtn);
+        wrapper.appendChild(row);
 
-                const data = await response.json();
-                addMessage(data.choices[0].message.content, false);
+        // Insert before typing indicator if exists
+        const typingInd = document.getElementById('typing-ind');
+        if (typingInd) chatArea.insertBefore(wrapper, typingInd);
+        else chatArea.appendChild(wrapper);
 
-            } catch (error) {
-                typingIndicator.style.display = "none";
-                addMessage(`Error: ${error.message}`, false);
-            }
+        // reliable scroll: scrollIntoView + RAF fallback
+        try {
+            wrapper.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        } catch (e) {
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+        requestAnimationFrame(() => { chatArea.scrollTop = chatArea.scrollHeight; });
+    }
+
+    // ---------- events: new chat ----------
+    newChatBtn.addEventListener('click', () => {
+        const id = uid();
+        const defaultTitle = settings.language === 'ru' ? 'Новый чат' : 'New chat';
+        const newChat = { id, title: defaultTitle, messages: [{ role: 'assistant', content: settings.language === 'ru' ? 'Привет! Меня зовут Yaroslav AI! Чем могу помочь?' : "Hello! My name is Yaroslav AI! How can I help you today?", ts: Date.now() }], createdAt: Date.now() };
+        chats.unshift(newChat);
+        activeChatId = id;
+        saveChats(chats);
+        renderChatsList();
+        renderActiveChat();
+    });
+
+    // ---------- settings panel handling ----------
+    function openSettingsPanel() {
+        settingsPanel.style.display = 'block';
+        settingsPanel.setAttribute('aria-hidden', 'false');
+        overlay.style.display = 'block';
+        userNameInput.value = settings.userName || '';
+        aboutYouInput.value = settings.about || '';
+        setTimeout(() => userNameInput.focus(), 120);
+        // mark active lang button
+        langBtns.forEach(b => b.classList.toggle('active', b.dataset.lang === settings.language));
+    }
+    function closeSettingsPanel() {
+        settingsPanel.style.display = 'none';
+        settingsPanel.setAttribute('aria-hidden', 'true');
+        overlay.style.display = 'none';
+        saveSettings(settings);
+        renderUIStrings();
+        renderChatsList();
+        renderActiveChat();
+    }
+
+    settingsBtn.addEventListener('click', () => {
+        if (settingsPanel.style.display === 'block') closeSettingsPanel(); else openSettingsPanel();
+    });
+    overlay.addEventListener('click', () => closeSettingsPanel());
+    closeSettingsBtn.addEventListener('click', () => closeSettingsPanel());
+
+    langBtns.forEach(b => {
+        b.addEventListener('click', () => {
+            settings.language = b.dataset.lang;
+            // toggle active class visually immediately
+            langBtns.forEach(bb => bb.classList.toggle('active', bb === b));
+            saveSettings(settings);
+            renderUIStrings();
+            renderChatsList();
+            renderActiveChat();
+        });
+    });
+
+    supportBtn.addEventListener('click', () => {
+        window.open('https://larfi44.github.io/Yarik_Studio.github.io/support.html', '_blank');
+    });
+
+    userNameInput.addEventListener('input', () => {
+        if (userNameInput.value.length > 30) userNameInput.value = userNameInput.value.slice(0,30);
+    });
+
+    userNameInput.addEventListener('change', () => {
+        const val = userNameInput.value.trim();
+        settings.userName = val ? val.slice(0,30) : (settings.language === 'ru' ? 'Вы' : 'You');
+        saveSettings(settings);
+        renderChatsList();
+        renderActiveChat();
+    });
+
+    aboutYouInput.addEventListener('change', () => {
+        settings.about = aboutYouInput.value.slice(0,444);
+        saveSettings(settings);
+    });
+
+    // ---------- mode toggle ----------
+    function setMode(mode) {
+        if (mode === 'fast') {
+            modeFastBtn.classList.add('active');
+            modeStandardBtn.classList.remove('active');
+            settings.mode = 'fast';
+        } else {
+            modeStandardBtn.classList.add('active');
+            modeFastBtn.classList.remove('active');
+            settings.mode = 'standard';
+        }
+        saveSettings(settings);
+    }
+    modeStandardBtn.addEventListener('click', () => setMode('standard'));
+    modeFastBtn.addEventListener('click', () => setMode('fast'));
+
+    // ---------- system prompt builder ----------
+    function getSystemPrompt(mode) {
+        const lang = settings.language || 'en';
+        const userName = settings.userName || (lang === 'ru' ? 'Пользователь' : 'User');
+        const aboutUser = settings.about || 'No information provided.';
+
+        let base = `You are Yaroslav AI, a very friendly, male AI assistant developed by Yarik Studio. You understand emotions and often use smiles or emojis.
+The user's name is "${userName}".
+About the user: "${aboutUser}". Use this information to personalize your responses.`;
+
+        if (lang === 'ru') {
+            base += `
+IMPORTANT: You MUST ALWAYS respond in Russian.
+When the user writes in Russian, you should correct their grammar if you notice mistakes.`;
+        } else {
+            base += `
+IMPORTANT: You MUST ALWAYS respond in English.`;
         }
 
-        sendBtn.addEventListener('click', () => {
-            const message = userInput.value.trim();
-            if (message) {
-                addMessage(message, true);
-                userInput.value = '';
-                sendToAI(message);
+        if (mode === 'fast') {
+            return base + '\nIn FAST mode: provide a short, concise, and quick answer. Use fewer tokens.';
+        } else {
+            return base + '\nIn STANDARD mode: answer clearly and helpfully with moderate length; include emojis occasionally.';
+        }
+    }
+
+
+    // ---------- sendToAI with robust handling (do NOT save error messages into chat history) ----------
+    async function sendToAI(userMessage) {
+        const chat = ensureActiveChat();
+        if (!chat) return;
+
+        // push user message into history
+        chat.messages.push({ role: 'user', content: userMessage, ts: Date.now() });
+        saveChats(chats);
+        appendMessageToDOM(true, userMessage);
+
+        // show typing indicator (create if missing)
+        let typingInd = document.getElementById('typing-ind');
+        if (!typingInd) {
+            typingInd = createTypingIndicator();
+            typingInd.id = 'typing-ind';
+            chatArea.appendChild(typingInd);
+        }
+        typingInd.style.display = 'flex';
+        chatArea.scrollTop = chatArea.scrollHeight;
+
+        // prepare payload (include recent messages as context)
+        const recent = chat.messages.slice(-8).map(m => ({ role: m.role, content: m.content }));
+        const payload = {
+            model: MODEL,
+            messages: [
+                { role: 'system', content: getSystemPrompt(settings.mode || 'standard') },
+                ...recent
+            ]
+        };
+
+        try {
+            const resp = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${API_KEY}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            // parse response text (safer for error reporting)
+            const text = await resp.text();
+            let data = null;
+            try { data = text ? JSON.parse(text) : null; } catch (e) { data = null; }
+
+            if (!resp.ok) {
+                const errMsg = (data && data.error && data.error.message) ? data.error.message : `Request failed: ${resp.status} ${resp.statusText}`;
+                let shown = '⚠️ API Error: ' + errMsg;
+                if (errMsg && errMsg.toLowerCase().includes('user not found')) {
+                    shown += settings.language==='ru' ? `\n(Причины: неверный ключ, ключ не активирован, или OpenRouter блокирует публичные фронтенд-запросы.)` : `\n(Possible causes: wrong API key, key not activated, or OpenRouter blocks public front-end requests.)`;
+                    shown += settings.language==='ru' ? `\nРешение: проверьте ключ или используйте сервер-прокси.` : `\nFix: check your key or use a server-side proxy.`;
+                }
+                appendMessageToDOM(false, shown);
+                typingInd.style.display = 'none';
+                return;
             }
-        });
 
-        userInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendBtn.click();
-        });
+            if (!data || !data.choices || !data.choices.length || !data.choices[0].message) {
+                const fallback = data && data.error && data.error.message ? data.error.message : 'No assistant response was returned.';
+                appendMessageToDOM(false, '⚠️ API: ' + fallback);
+                typingInd.style.display = 'none';
+                return;
+            }
 
-        userInput.focus();
+            // assistant reply
+            const assistantText = data.choices[0].message.content || '';
+            appendMessageToDOM(false, assistantText);
+
+            // save assistant message into history
+            chat.messages.push({ role: 'assistant', content: assistantText, ts: Date.now() });
+            saveChats(chats);
+
+        } catch (err) {
+            appendMessageToDOM(false, '⚠️ Network/Error: ' + (err.message || err));
+        } finally {
+            const t = document.getElementById('typing-ind');
+            if (t) t.style.display = 'none';
+            requestAnimationFrame(() => { chatArea.scrollTop = chatArea.scrollHeight; });
+        }
+    }
+
+    // ---------- send button wiring ----------
+    sendBtn.addEventListener('click', () => {
+        const text = userInput.value.trim();
+        if (!text) return;
+        userInput.value = '';
+        sendToAI(text);
     });
+
+    userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendBtn.click(); });
+
+    // ---------- render active chat ----------
+    function renderActiveChat() {
+        const chat = ensureActiveChat();
+        chatArea.innerHTML = '';
+        if (!chat) return;
+
+        chat.messages.forEach(m => {
+            appendMessageToDOM(m.role === 'user', m.content, m.ts || Date.now());
+        });
+        // attach typing placeholder
+        const typing = createTypingIndicator();
+        typing.style.display = 'none';
+        typing.id = 'typing-ind';
+        chatArea.appendChild(typing);
+        // reliable scroll to bottom
+        chatArea.scrollTop = chatArea.scrollHeight;
+        requestAnimationFrame(() => { chatArea.scrollTop = chatArea.scrollHeight; });
+        renderChatsList();
+    }
+
+    // ---------- Onboarding Logic ----------
+    function handleOnboarding() {
+        if (settings.onboardingComplete) {
+            initializeApp();
+            return;
+        }
+
+        const ONBOARDING_TRANSLATIONS = {
+            en: {
+                welcome: 'Welcome to Yaroslav AI',
+                prompt: 'Please set up your profile to get started.',
+                nameLabel: 'What should AI call you?',
+                aboutLabel: 'About you (≤444 chars)',
+                langLabel: 'Interface language',
+                saveButton: 'Save and Start'
+            },
+            ru: {
+                welcome: 'Добро пожаловать в Yaroslav AI',
+                prompt: 'Пожалуйста, настройте свой профиль для начала работы.',
+                nameLabel: 'Как ИИ должен к вам обращаться?',
+                aboutLabel: 'О вас (≤444 символов)',
+                langLabel: 'Язык интерфейса',
+                saveButton: 'Сохранить и начать'
+            }
+        };
+
+        const content = onboardingModal.querySelector('.onboarding-content');
+        const h2 = content.querySelector('h2');
+        const p = content.querySelector('p');
+        const nameLabel = content.querySelector('label[for="onboarding-user-name"]');
+        const aboutLabel = content.querySelector('label[for="onboarding-about-you"]');
+        const langLabel = content.querySelector('.onboarding-row:nth-of-type(3) > label');
+
+
+        function renderOnboardingUI(lang) {
+            const t = ONBOARDING_TRANSLATIONS[lang];
+            h2.textContent = t.welcome;
+            p.textContent = t.prompt;
+            nameLabel.textContent = t.nameLabel;
+            aboutLabel.textContent = t.aboutLabel;
+            langLabel.textContent = t.langLabel;
+            onboardingSaveBtn.textContent = t.saveButton;
+        }
+
+        onboardingModal.style.display = 'flex';
+        let selectedLang = 'en'; // Default to English
+
+        // Set default state
+        renderOnboardingUI(selectedLang);
+        onboardingLangBtns.forEach(b => b.classList.toggle('active', b.dataset.lang === selectedLang));
+
+
+        const checkCanSave = () => {
+            const name = onboardingUserNameInput.value.trim();
+            onboardingSaveBtn.disabled = !(name && selectedLang);
+        };
+
+        onboardingUserNameInput.addEventListener('input', checkCanSave);
+
+        onboardingLangBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                selectedLang = btn.dataset.lang;
+                onboardingLangBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderOnboardingUI(selectedLang);
+                checkCanSave();
+            });
+        });
+
+        onboardingSaveBtn.addEventListener('click', () => {
+            settings.userName = onboardingUserNameInput.value.trim();
+            settings.about = onboardingAboutYouInput.value.trim();
+            settings.language = selectedLang;
+            settings.onboardingComplete = true;
+            settings.mode = 'standard'; // default mode
+
+            saveSettings(settings);
+            onboardingModal.style.display = 'none';
+            initializeApp();
+        });
+
+        checkCanSave(); // Initial check
+    }
+
+    // ---------- Initialization ----------
+    function initializeApp() {
+        chats = loadChats();
+        if (!chats.length) {
+            const id = uid();
+            chats.push({
+                id,
+                title: settings.language === 'ru' ? 'Новый чат' : 'New chat',
+                messages: [{ role: 'assistant', content: settings.language === 'ru' ? 'Привет! Меня зовут Yaroslav AI! Чем могу помочь?' : "Hello! My name is Yaroslav AI! How can I help you today?", ts: Date.now() }],
+                createdAt: Date.now()
+            });
+            saveChats(chats);
+        }
+        activeChatId = chats[0].id;
+
+        renderUIStrings();
+        setMode(settings.mode);
+        renderChatsList();
+        renderActiveChat();
+
+        // expose basic helpers for debugging
+        window.__YA = { chats, settings, saveChats, saveSettings };
+    }
+
+    // --- App Start ---
+    settings = loadSettings();
+    handleOnboarding();
 
 </script>
 </body>
