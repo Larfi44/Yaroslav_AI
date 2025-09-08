@@ -12,7 +12,7 @@ app.use(bodyParser.json());
 app.use(express.static(__dirname)); // Serve static files from the root directory
 
 // IMPORTANT: Move this to an environment variable in a real production environment
-const API_KEY = process.env.OPENROUTER_API_KEY;
+const API_KEY = 'YOUR_API_KEY';
 const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 app.post('/api/chat', async (req, res) => {
