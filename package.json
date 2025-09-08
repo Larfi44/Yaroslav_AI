@@ -1,7 +1,7 @@
 {
   "name": "yaroslav-ai",
   "version": "1.0.0",
-  "description": "Developed by **Yarik Studio**.",
+  "description": "This is an AI developed by Yarik Studio",
   "main": "index.js",
   "scripts": {
     "start": "vercel dev",
