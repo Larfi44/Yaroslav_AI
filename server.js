@@ -38,6 +38,4 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
-app.listen(port, () => {
-    console.log(`Yaroslav AI server listening on port ${port}`);
-});
+module.exports = app;
