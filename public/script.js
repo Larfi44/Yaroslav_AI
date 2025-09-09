@@ -1,5 +1,5 @@
 // ---------- Config (replace locally if testing) ----------
-const API_URL = '/api/chat';
+const API_URL = '/api/server';
 const MODEL = 'mistralai/mistral-7b-instruct:free';
 
 // ---------- Browser Check ----------
