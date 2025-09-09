@@ -41,6 +41,7 @@ const sendBtn = document.getElementById('send-btn');
 const voiceBtn = document.getElementById('voice-btn');
 const modeStandardBtn = document.getElementById('mode-standard');
 const modeFastBtn = document.getElementById('mode-fast');
+const modeCreativeBtn = document.getElementById('mode-creative');
 
 const menuToggleBtn = document.getElementById('menu-toggle-btn');
 const sidebar = document.querySelector('.sidebar'); // Assuming .sidebar is the correct class
@@ -81,6 +82,7 @@ const ui = {
     closeSettingsBtn: document.getElementById('ui-close-settings'),
     standard: document.getElementById('ui-standard'),
     fast: document.getElementById('ui-fast'),
+    creative: document.getElementById('ui-creative'), // Added Creative mode UI element
     themeLabel: document.getElementById('ui-theme-label'),
     themeLightOnboarding: document.getElementById('ui-theme-light-onboarding'),
     themeDarkOnboarding: document.getElementById('ui-theme-dark-onboarding'),
@@ -104,6 +106,7 @@ const TRANSLATIONS = {
         supportBtn: 'Tech support',
         standard: 'Standard',
         fast: 'Fast',
+        creative: 'Creative', // Added Creative mode translation
         themeLabel: 'Theme',
         themeLight: 'Light',
         themeDark: 'Dark',
@@ -124,6 +127,7 @@ const TRANSLATIONS = {
         supportBtn: 'Техподдержка',
         standard: 'Стандартный',
         fast: 'Быстрый',
+        creative: 'Креативный', // Updated Creative mode translation
         themeLabel: 'Тема',
         themeLight: 'Светлая',
         themeDark: 'Темная',
@@ -157,6 +161,7 @@ function renderUIStrings() {
     ui.supportBtn.textContent = t.supportBtn;
     ui.standard.textContent = t.standard;
     ui.fast.textContent = t.fast;
+    ui.creative.textContent = t.creative; // Added Creative mode translation
     ui.themeLabel.textContent = t.themeLabel;
     ui.themeLightOnboarding.textContent = t.themeLight;
     ui.themeDarkOnboarding.textContent = t.themeDark;
@@ -412,19 +417,25 @@ aboutYouInput.addEventListener('change', () => {
 
 // ---------- mode toggle ----------
 function setMode(mode) {
+    modeStandardBtn.classList.remove('active');
+    modeFastBtn.classList.remove('active');
+    modeCreativeBtn.classList.remove('active'); // Remove active from Creative
+
     if (mode === 'fast') {
         modeFastBtn.classList.add('active');
-        modeStandardBtn.classList.remove('active');
         settings.mode = 'fast';
-    } else {
+    } else if (mode === 'creative') { // Handle Creative mode
+        modeCreativeBtn.classList.add('active');
+        settings.mode = 'creative';
+    } else { // Default to standard
         modeStandardBtn.classList.add('active');
-        modeFastBtn.classList.remove('active');
         settings.mode = 'standard';
     }
     saveSettings(settings);
 }
 modeStandardBtn.addEventListener('click', () => setMode('standard'));
 modeFastBtn.addEventListener('click', () => setMode('fast'));
+modeCreativeBtn.addEventListener('click', () => setMode('creative')); // Add event listener for Creative
 
 // ---------- theme switcher ----------
 function applyTheme(theme) {
@@ -526,7 +537,9 @@ IMPORTANT: You MUST ALWAYS respond in English.`;
 
     if (mode === 'fast') {
         return base + '\nIn FAST mode: provide a short, concise, and quick answer. Use fewer tokens.';
-    } else {
+    } else if (mode === 'creative') {
+        return base + '\nIn CREATIVE mode: You are an imaginative, friendly, and highly creative AI. Think outside the box, generate unique ideas, and provide detailed, engaging responses. Your answers should be inspiring and thought-provoking, similar in length to STANDARD mode.';
+    } else { // Default to standard
         return base + '\nIn STANDARD mode: answer clearly and helpfully with moderate length; include emojis occasionally.';
     }
 }

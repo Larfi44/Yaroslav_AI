@@ -391,6 +391,7 @@ body {
 .send-wrap { display:flex; gap:10px; align-items:center; }
 
 #voice-btn {
+    display: none; /* Hide the voice button */
     width:46px;
     height:46px;
     background: #6e8efb;
@@ -399,7 +400,7 @@ body {
     border-radius: 12px;
     cursor: pointer;
     font-size: 16px;
-    display: flex;
+    /* Removed display: flex; as it's now none */
     align-items: center;
     justify-content: center;
 }
@@ -431,6 +432,15 @@ body {
 .version-select { background:#f6f7ff; padding:8px; border-radius:10px; display:flex; gap:6px; align-items:center; }
 .version-select button { padding:6px 10px; border-radius:8px; border:1px solid transparent; cursor:pointer; background:transparent; }
 .version-select button.active { /* handled above */ }
+
+@media (max-width: 900px) {
+    .version-select {
+        max-width: 280px; /* More width for one row */
+        /* Removed flex-wrap: wrap; to keep in one row */
+        justify-content: center; /* Center buttons */
+        gap: 4px; /* Slightly reduce gap to fit */
+    }
+}
 
 /* ---------- Settings panel (modal-like) ---------- */
 .settings-panel {
@@ -499,6 +509,19 @@ body {
         top: 14px;
         right: 14px;
         z-index: 102;
+    }
+    .composer {
+        flex-direction: column; /* Stack items vertically */
+        gap: 8px; /* Reduce gap */
+        padding: 10px; /* Adjust padding */
+    }
+    #user-input {
+        width: 100%; /* Take full width */
+        flex: none; /* Remove flex:1 to allow width to be 100% */
+    }
+    .send-wrap {
+        width: 100%; /* Take full width */
+        justify-content: space-between; /* Distribute items */
     }
     .settings-panel { right:12px; top:72px; }
 }
