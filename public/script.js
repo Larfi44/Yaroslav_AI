@@ -38,6 +38,7 @@ const chatArea = document.getElementById('chat-area');
 const newChatBtn = document.getElementById('new-chat');
 const userInput = document.getElementById('user-input');
 const sendBtn = document.getElementById('send-btn');
+const voiceBtn = document.getElementById('voice-btn');
 const modeStandardBtn = document.getElementById('mode-standard');
 const modeFastBtn = document.getElementById('mode-fast');
 
@@ -46,7 +47,7 @@ const sidebar = document.querySelector('.sidebar'); // Assuming .sidebar is the 
 
 const settingsBtn = document.getElementById('settings-btn');
 const settingsPanel = document.getElementById('settings-panel');
-    const closeSettingsBtn = document.getElementById('ui-close-settings');
+const closeSettingsBtn = document.getElementById('ui-close-settings');
 const langBtns = document.querySelectorAll('.lang-btn');
 const userNameInput = document.getElementById('user-name');
 const aboutYouInput = document.getElementById('about-you');
@@ -137,6 +138,8 @@ let chats = [];
 let settings = {};
 let activeChatId = null;
 let lastMessageTime = 0;
+let recognition = null;
+let isListening = false;
 
 
 // ---------- UI rendering ----------
@@ -303,13 +306,13 @@ function appendMessageToDOM(isUser, text, ts) {
 
     // Insert before typing indicator if exists
     const typingInd = document.getElementById('typing-ind');
-    if (typingInd) chatArea.insertBefore(wrapper, typingInd); 
+    if (typingInd) chatArea.insertBefore(wrapper, typingInd);
     else chatArea.appendChild(wrapper);
 
     // reliable scroll: scrollIntoView + RAF fallback
     try {
         wrapper.scrollIntoView({ behavior: 'smooth', block: 'end' });
-    } catch (e) { 
+    } catch (e) {
         chatArea.scrollTop = chatArea.scrollHeight;
     }
     requestAnimationFrame(() => { chatArea.scrollTop = chatArea.scrollHeight; });
@@ -369,6 +372,13 @@ langBtns.forEach(b => {
         renderUIStrings();
         renderChatsList();
         renderActiveChat();
+        // Update speech recognition language
+        if (recognition) {
+            recognition.stop();
+            isListening = false;
+            voiceBtn.classList.remove('listening');
+        }
+        initSpeechRecognition();
     });
 });
 
@@ -440,6 +450,57 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
         applyTheme('auto');
     }
 });
+
+// ---------- Voice Input (Speech Recognition) ----------
+function initSpeechRecognition() {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        voiceBtn.style.display = 'none';
+        return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = settings.language === 'ru' ? 'ru-RU' : 'en-US';
+
+    recognition.onstart = () => {
+        isListening = true;
+        voiceBtn.classList.add('listening');
+        voiceBtn.innerHTML = '<i class="fa fa-stop"></i>';
+    };
+
+    recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        userInput.value = transcript;
+        sendBtn.click();
+    };
+
+    recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        isListening = false;
+        voiceBtn.classList.remove('listening');
+        voiceBtn.innerHTML = '<i class="fa fa-microphone"></i>';
+        // Optional: Show alert for errors like 'no-speech' or 'not-allowed'
+        if (event.error === 'not-allowed') {
+            alert(settings.language === 'ru' ? 'Микрофон недоступен. Разрешите доступ.' : 'Microphone not allowed. Please grant permission.');
+        }
+    };
+
+    recognition.onend = () => {
+        isListening = false;
+        voiceBtn.classList.remove('listening');
+        voiceBtn.innerHTML = '<i class="fa fa-microphone"></i>';
+    };
+
+    voiceBtn.addEventListener('click', () => {
+        if (isListening) {
+            recognition.stop();
+        } else {
+            recognition.start();
+        }
+    });
+}
 
 // ---------- system prompt builder ----------
 function getSystemPrompt(mode) {
@@ -591,7 +652,7 @@ function renderActiveChat() {
 }
 
 // ---------- Onboarding Logic ----------
-    function handleOnboarding() {
+function handleOnboarding() {
     if (settings.onboardingComplete) {
         initializeApp();
         return;
@@ -653,6 +714,10 @@ function renderActiveChat() {
 
     onboardingModal.style.display = 'flex';
     let selectedLang = 'en'; // Default to English
+    const browserLanguage = navigator.language.toLowerCase();
+    if (browserLanguage.startsWith('ru') || browserLanguage.startsWith('be')) {
+        selectedLang = 'ru';
+    }
     let selectedTheme = 'auto'; // Default theme
 
     // Set default state
@@ -724,6 +789,7 @@ function initializeApp() {
     renderUIStrings();
     setMode(settings.mode);
     setTheme(settings.theme || 'auto');
+    initSpeechRecognition();
     renderChatsList();
     renderActiveChat();
 
