@@ -44,6 +44,7 @@ const modeFastBtn = document.getElementById('mode-fast');
 
 const menuToggleBtn = document.getElementById('menu-toggle-btn');
 const sidebar = document.querySelector('.sidebar'); // Assuming .sidebar is the correct class
+const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
 
 const settingsBtn = document.getElementById('settings-btn');
 const settingsPanel = document.getElementById('settings-panel');
@@ -359,6 +360,12 @@ if (menuToggleBtn && sidebar) {
     menuToggleBtn.addEventListener('click', () => {
         sidebar.classList.toggle('open');
     });
+
+    if (sidebarCloseBtn) {
+        sidebarCloseBtn.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+        });
+    }
 }
 overlay.addEventListener('click', () => closeSettingsPanel());
 closeSettingsBtn.addEventListener('click', () => closeSettingsPanel());
