@@ -453,8 +453,10 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
 
 // ---------- Voice Input (Speech Recognition) ----------
 function initSpeechRecognition() {
+    voiceBtn.style.display = 'flex'; // Always show
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-        voiceBtn.style.display = 'none';
+        voiceBtn.disabled = true;
+        voiceBtn.title = 'Speech not supported in this browser';
         return;
     }
 
