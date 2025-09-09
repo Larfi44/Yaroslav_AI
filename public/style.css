@@ -128,7 +128,7 @@ body {
 /* ---------- Shell ---------- */
 .app {
     width: 100%;
-    max-width: 1200px;
+    max-width: 1500px;
     height: 90vh;
     display: grid;
     grid-template-columns: 260px 1fr;
@@ -138,6 +138,18 @@ body {
     box-shadow: 0 20px 50px rgba(0,0,0,0.25);
     overflow: hidden;
     position: relative;
+}
+
+@media (min-width: 1600px) {
+    .app {
+        grid-template-columns: 300px 1fr; /* Wider sidebar for big monitors */
+    }
+}
+
+@media (min-width: 1920px) { /* Even wider sidebar for very large monitors */
+    .app {
+        grid-template-columns: 350px 1fr;
+    }
 }
 
 /* overlay when settings open */
@@ -382,6 +394,10 @@ body {
     width:52px; height:46px; background:green; border:none; color:white; border-radius:12px; cursor:pointer; font-size:16px;
 }
 
+#send-btn:hover {
+    background-color: greenyellow;
+}
+
 /* version selector */
 .version-select { background:#f6f7ff; padding:8px; border-radius:10px; display:flex; gap:6px; align-items:center; }
 .version-select button { padding:6px 10px; border-radius:8px; border:1px solid transparent; cursor:pointer; background:transparent; }
@@ -412,8 +428,41 @@ body {
 .btn-primary { background:#6e8efb; color:white; border:none; padding:8px 10px; border-radius:8px; cursor:pointer; }
 
 /* responsive */
+/* responsive */
 @media (max-width: 900px) {
     .app { grid-template-columns:1fr; height:95vh; }
-    .sidebar { display:none; }
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 260px; /* Keep original sidebar width */
+        transform: translateX(-100%); /* Hidden by default */
+        z-index: 100;
+        transition: transform 0.3s ease-in-out;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.2); /* Add a subtle shadow */
+        display: flex; /* Ensure it's still a flex container */
+    }
+    .sidebar.open {
+        transform: translateX(0); /* Show sidebar */
+    }
+    .menu-toggle-btn { /* New button to show/hide sidebar */
+        display: block;
+        position: absolute;
+        top: 18px; /* Adjust position as needed */
+        left: 18px; /* Adjust position as needed */
+        z-index: 101; /* Above sidebar */
+        background: #6e8efb;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+    }
     .settings-panel { right:12px; top:72px; }
+}
+
+/* Hide menu toggle button by default on larger screens */
+.menu-toggle-btn {
+    display: none;
 }

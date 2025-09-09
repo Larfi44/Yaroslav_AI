@@ -41,6 +41,9 @@ const sendBtn = document.getElementById('send-btn');
 const modeStandardBtn = document.getElementById('mode-standard');
 const modeFastBtn = document.getElementById('mode-fast');
 
+const menuToggleBtn = document.getElementById('menu-toggle-btn');
+const sidebar = document.querySelector('.sidebar'); // Assuming .sidebar is the correct class
+
 const settingsBtn = document.getElementById('settings-btn');
 const settingsPanel = document.getElementById('settings-panel');
     const closeSettingsBtn = document.getElementById('ui-close-settings');
@@ -104,6 +107,8 @@ const TRANSLATIONS = {
         themeDark: 'Dark',
         themeAuto: 'Auto',
         close: 'Close',
+        yourNamePlaceholder: 'Your name (e.g. Yaroslav)',
+        aboutYouPlaceholder: 'Write something about yourself...',
     },
     ru: {
         chats: 'Чаты',
@@ -122,6 +127,8 @@ const TRANSLATIONS = {
         themeDark: 'Темная',
         themeAuto: 'Авто',
         close: 'Закрыть',
+        yourNamePlaceholder: 'Ваше имя (например, Ярослав)',
+        aboutYouPlaceholder: 'Напишите что-нибудь о себе...',
     }
 };
 
@@ -156,6 +163,8 @@ function renderUIStrings() {
     ui.closeSettingsBtn.textContent = t.close;
     // placeholder
     userInput.placeholder = settings.language === 'ru' ? 'Введите ваше сообщение...' : 'Type your message here...';
+    userNameInput.placeholder = t.yourNamePlaceholder;
+    aboutYouInput.placeholder = t.aboutYouPlaceholder;
     // language badge
     langBadge.textContent = settings.language === 'ru' ? 'RU' : 'EN';
     // update active state for lang buttons
@@ -342,6 +351,12 @@ function closeSettingsPanel() {
 settingsBtn.addEventListener('click', () => {
     if (settingsPanel.style.display === 'block') closeSettingsPanel(); else openSettingsPanel();
 });
+
+if (menuToggleBtn && sidebar) {
+    menuToggleBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+    });
+}
 overlay.addEventListener('click', () => closeSettingsPanel());
 closeSettingsBtn.addEventListener('click', () => closeSettingsPanel());
 
@@ -584,7 +599,7 @@ function renderActiveChat() {
 
     const ONBOARDING_TRANSLATIONS = {
         en: {
-            welcome: 'Welcome to Yaroslav AI',
+            welcome: 'Welcome to Yaroslav AI!',
             prompt: 'Please set up your profile to get started.',
             nameLabel: 'What should AI call you?',
             aboutLabel: 'About you (optional)',
@@ -594,7 +609,7 @@ function renderActiveChat() {
             themeLabel: 'Theme',
         },
         ru: {
-            welcome: 'Добро пожаловать в Yaroslav AI',
+            welcome: 'Добро пожаловать в Yaroslav AI!',
             prompt: 'Пожалуйста, настройте свой профиль для начала работы.',
             nameLabel: 'Как ИИ должен к вам обращаться?',
             aboutLabel: 'О вас (опционально)',
@@ -631,6 +646,9 @@ function renderActiveChat() {
         ui.themeLightOnboarding.textContent = themeTranslations.themeLight;
         ui.themeDarkOnboarding.textContent = themeTranslations.themeDark;
         ui.themeAutoOnboarding.textContent = themeTranslations.themeAuto;
+
+        onboardingUserNameInput.placeholder = themeTranslations.yourNamePlaceholder;
+        onboardingAboutYouInput.placeholder = themeTranslations.aboutYouPlaceholder;
     }
 
     onboardingModal.style.display = 'flex';
