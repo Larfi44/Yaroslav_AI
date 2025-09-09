@@ -495,13 +495,7 @@ function initSpeechRecognition() {
         voiceBtn.innerHTML = '<i class="fa fa-microphone"></i>';
     };
 
-    voiceBtn.addEventListener('click', () => {
-        if (isListening) {
-            recognition.stop();
-        } else {
-            recognition.start();
-        }
-    });
+    
 }
 
 // ---------- system prompt builder ----------
@@ -792,6 +786,15 @@ function initializeApp() {
     setMode(settings.mode);
     setTheme(settings.theme || 'auto');
     initSpeechRecognition();
+    if (voiceBtn) { // Ensure voiceBtn exists before attaching listener
+        voiceBtn.addEventListener('click', () => {
+            if (isListening) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        });
+    }
     renderChatsList();
     renderActiveChat();
 
