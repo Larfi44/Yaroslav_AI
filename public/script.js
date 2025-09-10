@@ -97,7 +97,7 @@ const TRANSLATIONS = {
     en: {
         chats: 'Chats',
         new: 'New',
-        developed: 'Developed by <a href="https://larfi44.github.io/Yarik_Studio.github.io/ru/index.html" target="_blank">Yarik Studio</a>',
+        developed: '<span class="long-text">Developed by </span><span class="short-text">By </span><a href="https://larfi44.github.io/Yarik_Studio.github.io/ru/index.html" target="_blank">Yarik Studio</a>',
         settings: 'Settings',
         settingsTitle: 'Settings',
         languageLabel: 'Language',
@@ -118,7 +118,7 @@ const TRANSLATIONS = {
     ru: {
         chats: 'Чаты',
         new: 'Новый',
-        developed: 'Разработано <a href="https://larfi44.github.io/Yarik_Studio.github.io/ru/index.html" target="_blank">Yarik Studio</a>',
+        developed: '<span class="long-text">Разработано </span><span class="short-text">От </span><a href="https://larfi44.github.io/Yarik_Studio.github.io/ru/index.html" target="_blank">Yarik Studio</a>',
         settings: 'Настройки',
         settingsTitle: 'Настройки',
         languageLabel: 'Язык',

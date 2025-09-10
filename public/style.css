@@ -433,7 +433,7 @@ body {
 .version-select button { padding:6px 10px; border-radius:8px; border:1px solid transparent; cursor:pointer; background:transparent; }
 .version-select button.active { /* handled above */ }
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
     .version-select {
         max-width: 280px; /* More width for one row */
         /* Removed flex-wrap: wrap; to keep in one row */
@@ -468,7 +468,7 @@ body {
 
 /* responsive */
 /* responsive */
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
     .app { grid-template-columns:1fr; height:95vh; }
     .sidebar {
         position: fixed;
@@ -529,4 +529,28 @@ body {
 /* Hide sidebar close button by default on larger screens */
 .sidebar-close-btn {
     display: none;
+}
+
+@media (max-width: 650px) {
+    #lang-badge {
+        display: none;
+    }
+}
+
+.short-text {
+    display: none;
+}
+
+@media (max-width: 500px) {
+    .long-text {
+        display: none;
+    }
+
+    .short-text {
+        display: inline;
+    }
+
+    #settings-btn span {
+        display: none;
+    }
 }
