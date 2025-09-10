@@ -553,4 +553,16 @@ body {
     #settings-btn span {
         display: none;
     }
+
+    body {
+        padding: 0;
+    }
+
+    .app {
+        height: 100vh;
+        border-radius: 0;
+        box-shadow: none;
+        max-width: none;
+        gap: 0;
+    }
 }
