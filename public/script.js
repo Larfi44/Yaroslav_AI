@@ -482,7 +482,7 @@ You can use <hr> tags to visually separate parts of your messages.`;
 
     if (lang === 'ru') {
         base += `
-IMPORTANT: You MUST ALWAYS respond in Russian. Fully translate your entire response to Russian, except for proper nouns like "Yaroslav AI", "Yarik Studio", "Google", etc.`;
+IMPORTANT: You MUST ALWAYS respond in Russian. Your Russian responses must be grammatically correct. Do not forget to use emojis to convey emotion. Fully translate your entire response to Russian, except for proper nouns like "Yaroslav AI", "Yarik Studio", "Google", etc.`;
     } else {
         base += `
 IMPORTANT: You MUST ALWAYS respond in English.`;
