@@ -481,4 +481,289 @@ You can use <hr> tags to visually separate parts of your messages.`;
 
     if (lang === 'ru') {
         base += `
-IMPORTANT: You MUST ALWAYS respond in Russian. Fully translate your entire response to Russian, except for proper nouns like 
+IMPORTANT: You MUST ALWAYS respond in Russian. Fully translate your entire response to Russian, except for proper nouns like "Yaroslav AI", "Yarik Studio", "Google", etc.`;
+    } else {
+        base += `
+IMPORTANT: You MUST ALWAYS respond in English.`;
+    }
+
+    if (mode === 'fast') {
+        return base + '\nIn FAST mode: provide a short, concise, and quick answer. Use fewer tokens.';
+    } else if (mode === 'creative') {
+        return base + '\nIn CREATIVE mode: You are an imaginative, friendly, and highly creative AI. Think outside the box, generate unique ideas, and provide detailed, engaging responses. Your answers should be inspiring and thought-provoking, similar in length to STANDARD mode.';
+    } else { // Default to standard
+        return base + '\nIn STANDARD mode: answer clearly and helpfully with moderate length; include emojis occasionally.';
+    }
+}
+
+
+// ---------- sendToAI with robust handling (do NOT save error messages into chat history) ----------
+async function sendToAI(userMessage) {
+    const chat = ensureActiveChat();
+    if (!chat) return;
+
+    if (chat.messages.length >= MAX_MESSAGES_PER_CHAT) {
+        alert('The maximum number of messages for this chat has been reached.');
+        return;
+    }
+
+    // push user message into history
+    chat.messages.push({ role: 'user', content: userMessage, ts: Date.now() });
+    saveChats(chats);
+    appendMessageToDOM(true, userMessage);
+
+    // show typing indicator (create if missing)
+    let typingInd = document.getElementById('typing-ind');
+    if (!typingInd) {
+        typingInd = createTypingIndicator();
+        typingInd.id = 'typing-ind';
+        chatArea.appendChild(typingInd);
+    }
+    typingInd.style.display = 'flex';
+    chatArea.scrollTop = chatArea.scrollHeight;
+
+    // prepare payload (include recent messages as context)
+    const recent = chat.messages.slice(-8).map(m => ({ role: m.role, content: m.content }));
+    const payload = {
+        model: MODEL,
+        messages: [
+            { role: 'system', content: getSystemPrompt(settings.mode || 'standard') },
+            ...recent
+        ]
+    };
+
+    try {
+        const resp = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        // parse response text (safer for error reporting)
+        const text = await resp.text();
+        let data = null;
+        try { data = text ? JSON.parse(text) : null; } catch (e) { data = null; }
+
+        if (!resp.ok) {
+            const errMsg = (data && data.error && data.error.message) ? data.error.message : `Request failed: ${resp.status} ${resp.statusText}`;
+            let shown = '⚠️ API Error: ' + errMsg;
+            if (errMsg && errMsg.toLowerCase().includes('user not found')) {
+                shown += settings.language==='ru' ? `\n(Причины: неверный ключ, ключ не активирован, или OpenRouter блокирует публичные фронтенд-запросы.)` : `\n(Possible causes: wrong API key, key not activated, or OpenRouter blocks public front-end requests.)`;
+                shown += settings.language==='ru' ? `\nРешение: проверьте ключ или используйте сервер-прокси.` : `\nFix: check your key or use a server-side proxy.`;
+            }
+            appendMessageToDOM(false, shown);
+            typingInd.style.display = 'none';
+            return;
+        }
+
+        if (!data || !data.choices || !data.choices.length || !data.choices[0].message) {
+            const fallback = data && data.error && data.error.message ? data.error.message : 'No assistant response was returned.';
+            appendMessageToDOM(false, '⚠️ API: ' + fallback);
+            typingInd.style.display = 'none';
+            return;
+        }
+
+        // assistant reply
+        const assistantText = data.choices[0].message.content || '';
+        appendMessageToDOM(false, assistantText);
+
+        // save assistant message into history
+        chat.messages.push({ role: 'assistant', content: assistantText, ts: Date.now() });
+        saveChats(chats);
+
+    } catch (err) {
+        appendMessageToDOM(false, '⚠️ Network/Error: ' + (err.message || err));
+    } finally {
+        const t = document.getElementById('typing-ind');
+        if (t) t.style.display = 'none';
+        requestAnimationFrame(() => { chatArea.scrollTop = chatArea.scrollHeight; });
+    }
+}
+
+// ---------- send button wiring ----------
+sendBtn.addEventListener('click', () => {
+    const now = Date.now();
+    if (now - lastMessageTime < 10000) {
+        alert('You can send a message every 10 seconds.');
+        return;
+    }
+    lastMessageTime = now;
+
+    const text = userInput.value.trim();
+    if (!text) return;
+    userInput.value = '';
+    sendToAI(text);
+});
+
+userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendBtn.click(); });
+
+// ---------- render active chat ----------
+function renderActiveChat() {
+    const chat = ensureActiveChat();
+    chatArea.innerHTML = '';
+    if (!chat) return;
+
+    chat.messages.forEach(m => {
+        appendMessageToDOM(m.role === 'user', m.content, m.ts || Date.now());
+    });
+    // attach typing placeholder
+    const typing = createTypingIndicator();
+    typing.style.display = 'none';
+    typing.id = 'typing-ind';
+    chatArea.appendChild(typing);
+    // reliable scroll to bottom
+    chatArea.scrollTop = chatArea.scrollHeight;
+    requestAnimationFrame(() => { chatArea.scrollTop = chatArea.scrollHeight; });
+    renderChatsList();
+}
+
+// ---------- Onboarding Logic ----------
+function handleOnboarding() {
+    if (settings.onboardingComplete) {
+        initializeApp();
+        return;
+    }
+
+    const ONBOARDING_TRANSLATIONS = {
+        en: {
+            welcome: 'Welcome to Yaroslav AI!',
+            prompt: 'Please set up your profile to get started.',
+            nameLabel: 'What should AI call you?',
+            aboutLabel: 'About you (optional)',
+            langLabel: 'Language',
+            saveButton: 'Save and Start',
+            supportBtn: 'Tech support',
+            themeLabel: 'Theme',
+        },
+        ru: {
+            welcome: 'Добро пожаловать в Yaroslav AI!',
+            prompt: 'Пожалуйста, настройте свой профиль для начала работы.',
+            nameLabel: 'Как ИИ должен к вам обращаться?',
+            aboutLabel: 'О вас (опционально)',
+            langLabel: 'Язык',
+            saveButton: 'Сохранить и начать',
+            supportBtn: 'Техподдержка',
+            themeLabel: 'Тема',
+        }
+    };
+
+    const content = onboardingModal.querySelector('.onboarding-content');
+    const h2 = content.querySelector('h2');
+    const p = content.querySelector('p');
+    const nameLabel = content.querySelector('label[for="onboarding-user-name"]');
+    const aboutLabel = content.querySelector('label[for="onboarding-about-you"]');
+    const langLabel = content.querySelector('.onboarding-row:nth-of-type(3) > label');
+    const onboardingThemeLabel = document.getElementById('ui-onboarding-theme-label');
+    const onboardingThemeBtns = document.querySelectorAll('#onboarding-modal .theme-btn');
+    const onboardingSupportBtn = document.getElementById('onboarding-support-btn');
+
+
+    function renderOnboardingUI(lang) {
+        const t = ONBOARDING_TRANSLATIONS[lang];
+        h2.textContent = t.welcome;
+        p.textContent = t.prompt;
+        nameLabel.textContent = t.nameLabel;
+        aboutLabel.textContent = t.aboutLabel;
+        langLabel.textContent = t.langLabel;
+        onboardingSaveBtn.textContent = t.saveButton;
+        onboardingSupportBtn.textContent = t.supportBtn;
+        onboardingThemeLabel.textContent = t.themeLabel;
+
+        const themeTranslations = TRANSLATIONS[lang] || TRANSLATIONS.en;
+        ui.themeLightOnboarding.textContent = themeTranslations.themeLight;
+        ui.themeDarkOnboarding.textContent = themeTranslations.themeDark;
+        ui.themeAutoOnboarding.textContent = themeTranslations.themeAuto;
+
+        onboardingUserNameInput.placeholder = themeTranslations.yourNamePlaceholder;
+        onboardingAboutYouInput.placeholder = themeTranslations.aboutYouPlaceholder;
+    }
+
+    onboardingModal.style.display = 'flex';
+    let selectedLang = 'en'; // Default to English
+    const browserLanguage = navigator.language.toLowerCase();
+    if (browserLanguage.startsWith('ru') || browserLanguage.startsWith('be')) {
+        selectedLang = 'ru';
+    }
+    let selectedTheme = 'auto'; // Default theme
+
+    // Set default state
+    renderOnboardingUI(selectedLang);
+    onboardingLangBtns.forEach(b => b.classList.toggle('active', b.dataset.lang === selectedLang));
+    onboardingThemeBtns.forEach(b => b.classList.toggle('active', b.dataset.theme === selectedTheme));
+
+
+    const checkCanSave = () => {
+        const name = onboardingUserNameInput.value.trim();
+        onboardingSaveBtn.disabled = !(name && selectedLang);
+    };
+
+    onboardingUserNameInput.addEventListener('input', checkCanSave);
+
+    onboardingLangBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            selectedLang = btn.dataset.lang;
+            onboardingLangBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderOnboardingUI(selectedLang);
+            checkCanSave();
+        });
+    });
+
+    onboardingThemeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            selectedTheme = btn.dataset.theme;
+            onboardingThemeBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        });
+    });
+
+    onboardingSaveBtn.addEventListener('click', () => {
+        settings.userName = onboardingUserNameInput.value.trim();
+        settings.about = onboardingAboutYouInput.value.trim();
+        settings.language = selectedLang;
+        settings.theme = selectedTheme;
+        settings.onboardingComplete = true;
+        settings.mode = 'standard'; // default mode
+
+        saveSettings(settings);
+        onboardingModal.style.display = 'none';
+        initializeApp();
+    });
+
+    onboardingSupportBtn.addEventListener('click', () => {
+        window.open('https://larfi44.github.io/Yarik_Studio.github.io/support.html', '_blank');
+    });
+
+    checkCanSave(); // Initial check
+}
+
+// ---------- Initialization ----------
+function initializeApp() {
+    chats = loadChats();
+    if (!chats.length) {
+        const id = uid();
+        chats.push({
+            id,
+            title: settings.language === 'ru' ? 'Новый чат' : 'New chat',
+            messages: [{ role: 'assistant', content: settings.language === 'ru' ? 'Привет! Меня зовут Yaroslav AI! Чем могу помочь?' : "Hello! My name is Yaroslav AI! How can I help you today?", ts: Date.now() }],
+            createdAt: Date.now()
+        });
+        saveChats(chats);
+    }
+    activeChatId = chats[0].id;
+
+    renderUIStrings();
+    setMode(settings.mode);
+    setTheme(settings.theme || 'auto');
+    renderChatsList();
+    renderActiveChat();
+
+    // expose basic helpers for debugging
+    window.__YA = { chats, settings, saveChats, saveSettings };
+}
+
+// --- App Start ---
+settings = loadSettings();
+handleOnboarding();
