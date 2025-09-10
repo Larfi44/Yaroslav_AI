@@ -142,6 +142,7 @@ let chats = [];
 let settings = {};
 let activeChatId = null;
 let lastMessageTime = 0;
+let abortController = null;
 
 
 // ---------- UI rendering ----------
@@ -522,6 +523,13 @@ async function sendToAI(userMessage) {
     typingInd.style.display = 'flex';
     chatArea.scrollTop = chatArea.scrollHeight;
 
+    const sendIcon = sendBtn.querySelector('.fa-paper-plane');
+    const stopIcon = sendBtn.querySelector('.fa-stop');
+    sendIcon.style.display = 'none';
+    stopIcon.style.display = 'inline-block';
+
+    abortController = new AbortController();
+
     // prepare payload (include recent messages as context)
     const recent = chat.messages.slice(-8).map(m => ({ role: m.role, content: m.content }));
     const payload = {
@@ -538,7 +546,8 @@ async function sendToAI(userMessage) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(payload),
+            signal: abortController.signal
         });
 
         // parse response text (safer for error reporting)
@@ -574,16 +583,31 @@ async function sendToAI(userMessage) {
         saveChats(chats);
 
     } catch (err) {
-        appendMessageToDOM(false, '⚠️ Network/Error: ' + (err.message || err));
+        if (err.name !== 'AbortError') {
+            appendMessageToDOM(false, '⚠️ Network/Error: ' + (err.message || err));
+        }
     } finally {
         const t = document.getElementById('typing-ind');
         if (t) t.style.display = 'none';
         requestAnimationFrame(() => { chatArea.scrollTop = chatArea.scrollHeight; });
+        sendIcon.style.display = 'inline-block';
+        stopIcon.style.display = 'none';
+        abortController = null;
     }
 }
 
 // ---------- send button wiring ----------
 sendBtn.addEventListener('click', () => {
+    if (abortController) {
+        abortController.abort();
+        abortController = null;
+        const sendIcon = sendBtn.querySelector('.fa-paper-plane');
+        const stopIcon = sendBtn.querySelector('.fa-stop');
+        sendIcon.style.display = 'inline-block';
+        stopIcon.style.display = 'none';
+        return;
+    }
+
     const now = Date.now();
     if (now - lastMessageTime < 10000) {
         alert('You can send a message every 10 seconds.');

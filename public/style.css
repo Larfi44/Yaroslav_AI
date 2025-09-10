@@ -494,6 +494,7 @@ body {
     .send-wrap {
         width: 100%; /* Take full width */
         justify-content: space-between; /* Distribute items */
+        flex-wrap: wrap;
     }
     .settings-panel { right:12px; top:72px; }
 }
