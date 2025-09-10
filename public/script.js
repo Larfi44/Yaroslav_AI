@@ -385,12 +385,7 @@ langBtns.forEach(b => {
         renderChatsList();
         renderActiveChat();
         // Update speech recognition language
-        if (recognition) {
-            recognition.stop();
-            isListening = false;
-            voiceBtn.classList.remove('listening');
-        }
-        initSpeechRecognition();
+        
     });
 });
 
@@ -820,6 +815,11 @@ function initializeApp() {
 
     // expose basic helpers for debugging
     window.__YA = { chats, settings, saveChats, saveSettings };
+}
+
+// --- App Start ---
+settings = loadSettings();
+handleOnboarding();window.__YA = { chats, settings, saveChats, saveSettings };
 }
 
 // --- App Start ---
