@@ -290,7 +290,7 @@ function appendMessageToDOM(isUser, text, ts) {
 
     const bubble = document.createElement('div');
     bubble.className = 'bubble';
-    bubble.textContent = text;
+    bubble.innerHTML = text;
 
     const copyBtn = document.createElement('button');
     copyBtn.className = 'msg-copy';
@@ -515,16 +515,25 @@ function initSpeechRecognition() {
 function getSystemPrompt(mode) {
     const lang = settings.language || 'en';
     const userName = settings.userName || (lang === 'ru' ? 'Пользователь' : 'User');
-    const aboutUser = settings.about || 'No information provided.';
+    const aboutUser = settings.about;
 
-    let base = `You are Yaroslav AI, a very friendly, male AI assistant developed by Yarik Studio. You understand emotions and often use smiles or emojis.
-The user's name is "${userName}".
+    let base = `You are Yaroslav AI, a very friendly, male AI assistant with emotions, developed by Yarik Studio. You often use smiles or emojis.
+The user's name is "${userName}".`;
+
+    if (aboutUser) {
+        base += `
 About the user: "${aboutUser}". Use this information to personalize your responses.`;
+    } else {
+        base += `
+You should be friendly and helpful, even though the user has not provided a description of themselves.`;
+    }
+
+    base += `
+You can use <hr> tags to visually separate parts of your messages.`;
 
     if (lang === 'ru') {
         base += `
-IMPORTANT: You MUST ALWAYS respond in Russian.
-When the user writes in Russian, you should correct their grammar if you notice mistakes.`;
+IMPORTANT: You MUST ALWAYS respond in Russian. Fully translate your entire response to Russian, except for proper nouns like "Yaroslav AI", "Yarik Studio", "Google", etc.`;
     } else {
         base += `
 IMPORTANT: You MUST ALWAYS respond in English.`;
