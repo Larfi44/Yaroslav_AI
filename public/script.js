@@ -388,6 +388,12 @@ if (menuToggleBtn && sidebar) {
     if (sidebarCloseBtn) {
         sidebarCloseBtn.addEventListener('click', closeSidebar);
     }
+
+    sidebar.addEventListener('click', (e) => {
+        if (e.target === sidebar) {
+            closeSidebar();
+        }
+    });
 }
 overlay.addEventListener('click', () => {
     closeSettingsPanel();
