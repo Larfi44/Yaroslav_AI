@@ -458,7 +458,6 @@ body {
     .menu-toggle-btn { /* New button to show/hide sidebar */
         display: block;
         /* Removed absolute positioning, rely on flexbox */
-        z-index: 101; /* Above sidebar */
         background: #6e8efb;
         color: white;
         border: none;
