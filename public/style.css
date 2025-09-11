@@ -448,14 +448,12 @@ body {
         left: 20px; /* Adjusted to center with calc width */
         height: 100%;
         width: calc(100% - 40px); /* Almost full width */
-        transform: translateX(-100%); /* Hidden by default */
         z-index: 100;
-        transition: transform 0.3s ease-in-out;
         box-shadow: 2px 0 5px rgba(0,0,0,0.2); /* Add a subtle shadow */
-        display: none; /* Ensure it's still a flex container */
+        display: none; /* Hidden by default */
     }
     .sidebar.open {
-        transform: translateX(0); /* Show sidebar */
+        display: flex; /* Show sidebar */
     }
     .menu-toggle-btn { /* New button to show/hide sidebar */
         display: block;
@@ -486,6 +484,8 @@ body {
         flex-direction: column; /* Stack items vertically */
         gap: 8px; /* Reduce gap */
         padding: 10px; /* Adjust padding */
+        position: sticky;
+        bottom: 0;
     }
     #user-input {
         width: 100%; /* Take full width */

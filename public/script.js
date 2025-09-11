@@ -211,6 +211,9 @@ function renderChatsList() {
             activeChatId = c.id;
             renderChatsList();
             renderActiveChat();
+            if (window.innerWidth < 1100 && sidebar.classList.contains('open')) {
+                closeSidebar();
+            }
         });
 
         renameBtn.addEventListener('click', (ev) => {
@@ -348,7 +351,9 @@ function openSettingsPanel() {
 function closeSettingsPanel() {
     settingsPanel.style.display = 'none';
     settingsPanel.setAttribute('aria-hidden', 'true');
-    overlay.style.display = 'none';
+    if (!sidebar.classList.contains('open')) {
+        overlay.style.display = 'none';
+    }
     saveSettings(settings);
     renderUIStrings();
     renderChatsList();
@@ -359,18 +364,35 @@ settingsBtn.addEventListener('click', () => {
     if (settingsPanel.style.display === 'block') closeSettingsPanel(); else openSettingsPanel();
 });
 
+function openSidebar() {
+    sidebar.classList.add('open');
+    overlay.style.display = 'block';
+}
+
+function closeSidebar() {
+    sidebar.classList.remove('open');
+    if (settingsPanel.style.display === 'none') {
+        overlay.style.display = 'none';
+    }
+}
+
 if (menuToggleBtn && sidebar) {
     menuToggleBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('open');
+        if (sidebar.classList.contains('open')) {
+            closeSidebar();
+        } else {
+            openSidebar();
+        }
     });
 
     if (sidebarCloseBtn) {
-        sidebarCloseBtn.addEventListener('click', () => {
-            sidebar.classList.remove('open');
-        });
+        sidebarCloseBtn.addEventListener('click', closeSidebar);
     }
 }
-overlay.addEventListener('click', () => closeSettingsPanel());
+overlay.addEventListener('click', () => {
+    closeSettingsPanel();
+    closeSidebar();
+});
 closeSettingsBtn.addEventListener('click', () => closeSettingsPanel());
 
 langBtns.forEach(b => {
