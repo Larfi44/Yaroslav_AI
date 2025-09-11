@@ -489,14 +489,32 @@ body {
     }
     #user-input {
         width: 100%; /* Take full width */
-        flex: none; /* Remove flex:1 to allow width to be 100% */
     }
     .send-wrap {
         width: 100%; /* Take full width */
+        display: flex;
         justify-content: space-between; /* Distribute items */
-        flex-wrap: wrap;
+        align-items: center;
+        flex-wrap: nowrap;
+    }
+    .version-select {
+        flex-shrink: 1;
+        min-width: 0;
+    }
+    .version-select button {
+        padding: 4px 6px;
+        font-size: 12px;
+    }
+    #send-btn {
+        height: 40px;
+        width: 40px;
+        font-size: 14px;
     }
     .settings-panel { right:12px; top:72px; }
+
+    .message {
+        max-width: 95%;
+    }
 }
 
 /* Hide sidebar close button by default on larger screens */
