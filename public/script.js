@@ -237,7 +237,7 @@ function createTypingIndicator() {
     const wrap = document.createElement('div');
     wrap.className = 'typing-indicator';
     const img = document.createElement('img');
-    img.src = 'img/logo%20(dark).svg';
+    img.src = 'img/Yaroslav AI.svg';
     img.alt = 'loading';
     const txt = document.createElement('div');
     txt.textContent = settings.language === 'ru' ? 'Yaroslav AI думает...' : 'Yaroslav AI is thinking...';
