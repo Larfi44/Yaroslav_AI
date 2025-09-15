@@ -2,24 +2,7 @@
 const API_URL = '/api/server';
 const MODEL = 'mistralai/mistral-7b-instruct:free';
 
-// ---------- Browser Check ----------
-(function() {
-    const ua = navigator.userAgent;
-    if (/YaBrowser|Edg|MSIE|Trident/.test(ua)) {
-        document.body.innerHTML = `
-            <div style="position: fixed; inset: 0; background: #111; color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; font-family: sans-serif;">
-                <h2 style="margin-bottom: 15px;">Yandex browser and Microsoft Edge is blocked due the sanctions from Yarik Studio.</h2>
-                <p style="margin-bottom: 20px;">Please, try another browser. If need, type in tech support.</p>
-                <p style="margin-bottom: 25px; font-style: italic;">Яндекс Браузер и Microsoft Edge заблокированы из-за санкций со стороны Yarik Studio. Пожалуйста, попробуйте другой браузер. Если нужно, напишите в техподдержку.</p>
-                <button id="blocked-support-btn" class="btn-primary" style="width: auto; padding: 10px 20px;">Tech support</button>
-            </div>
-        `;
-        document.getElementById('blocked-support-btn').addEventListener('click', () => {
-            window.open('https://larfi44.github.io/Yarik_Studio.github.io/support.html', '_blank');
-        });
-        throw new Error("Browser blocked"); // Stop further script execution
-    }
-})();
+
 
 // ---------- LocalStorage keys ----------
 const LS_KEY = 'yaroslav_ai_chats_v1';
